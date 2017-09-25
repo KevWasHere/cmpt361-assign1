@@ -1,10 +1,10 @@
-CFLAGS = -Wall -pedantic -std=c99
+CCFLAGS = -Wall -pedantic -std=c99
 
 .PHONY: all clean
 
-all: qotdd jsmn/libjsmn.a
+all: qotdd #jsmn/libjsmn.a ADD THIS LATER
 
-qotdd: qotdd.o
+qotdd: qotdd.o #jsmn/libjsmn.a
 	$(CC) $(LDFLAGS) -o $@ $^
 
 qotdd.o: qotdd.c
