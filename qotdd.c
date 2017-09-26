@@ -4,9 +4,9 @@
   # qotdd.c
   # Description here later
 *-----------------------------------------------------------------------*/
-#define _POSIX_C_SORUCE >= 1
-#define _XOPEN_SOURCE
-#define _POSIX_SOURCE
+//#define _POSIX_C_SORUCE >= 1
+//#define _XOPEN_SOURCE
+//#define _POSIX_SOURCE
 
 #include <stdio.h>
 #include <stdlib.h>

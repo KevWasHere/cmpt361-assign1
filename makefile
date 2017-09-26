@@ -1,4 +1,4 @@
-CCFLAGS = -Wall -pedantic -std=c99
+CCFLAGS = -Wall -pedantic -std=c99 -D_POSIX_C_SORUCE >= 1 -D_XOPEN_SOURCE -D_POSIX_SOURCE
 
 .PHONY: all clean
 
