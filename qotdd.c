@@ -57,27 +57,30 @@ int main(int argc, char *argv[]) {
 
   int err = getaddrinfo(NULL, port, &hints, &server_info);
   printf("Err: %d\n", err);
-  /*
+  
   if (err != 0){
     fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(err));
     return 1; //Return anything but 0 means error. Might change later
   }
   for (current = server_info; current != NULL; current = current->ai_next){
-    if ((sock_fd = socket(current->ai_family, current->ai_sockettype, 
+	//Socket
+    if ((sock_fd = socket(current->ai_family, current->ai_socktype, 
 			  current->ai_protocol)) == -1){
       perror("Server: Socket");
       continue;
     }
-    if (setsocketopt(sock_fd, SOL_SOCKET, SO_REUSEADDR, &val, 
+    if (setsockopt(sock_fd, SOL_SOCKET, SO_REUSEADDR, &val, 
 		     sizeof(int)) == -1){
       perror("Server: setsockopt");
       exit(1);
     }
+	//Bind
     if (bind(sock_fd, current->ai_addr, current->ai_addrlen) == -1){
       close(sock_fd);
       perror("Server: bind");
       continue;
     } 
+	//Listen
     if (listen(sock_fd, BACKLOG) == -1){
       perror("Server: listen:");
       exit(1);
@@ -92,7 +95,7 @@ int main(int argc, char *argv[]) {
     fprintf(stderr, "Could not create server\n");
     exit(1);
   }
-*/
+
   //Add stuff for client connection (Accept loop)
   return 0;
 }
