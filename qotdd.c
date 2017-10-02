@@ -116,11 +116,33 @@ int main(int argc, char *argv[]) {
 		
 		printf("Accepted Connection...\n");
 		//inet_ntop cases for both INET4 and INET6
-		//Fork for accept connection
 		
-		char *msg = "Hello world!\n";
-		send(new_fd, msg, strlen(msg), 0);
-		close(new_fd);
+		
+		
+		//Fork for accept connection
+		int pid = fork();
+		if (pid < 0) {
+			//Fork failed. student server allowed for 50 processes
+			fprintf(stderr, "Fork failed");
+			exit(EXIT_FAILURE);
+		} else if (pid == 0) {
+			//Currently child
+			close(sock_fd); //Close becuase not listening for new connections
+				
+			char *msg = "Hello world!\n";
+			send(new_fd, msg, strlen(msg), 0);
+			
+			close(new_fd);
+			
+			exit(EXIT_FAILURE);
+		} else {
+			//Currently Parrent
+			close(new_fd); //Close client because not interating
+		}
+		
+		//char *msg = "Hello world!\n";
+		//send(new_fd, msg, strlen(msg), 0);
+		//close(new_fd);
 		
 		printf("Closed Connection...\n");
   }
