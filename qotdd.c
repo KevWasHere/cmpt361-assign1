@@ -39,7 +39,7 @@ int main(int argc, char *argv[]) {
   struct addrinfo hints, *server_info, *current;
   int option, sock_fd, new_fd;
   int val = 1;
-  /* while ((option = getopt(argc, argv,":p")) != -1){
+  /*while ((option = getopt(argc, argv,":p")) != -1){
     switch(option){
     case 'p' : port = optarg;
       break;
@@ -56,46 +56,73 @@ int main(int argc, char *argv[]) {
   hints.ai_flags = AI_PASSIVE;
 
   int err = getaddrinfo(NULL, port, &hints, &server_info);
-  printf("Err: %d\n", err);
+  //printf("Err: %d\n", err);
   
   if (err != 0){
     fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(err));
     return 1; //Return anything but 0 means error. Might change later
   }
   for (current = server_info; current != NULL; current = current->ai_next){
-	//Socket
-    if ((sock_fd = socket(current->ai_family, current->ai_socktype, 
-			  current->ai_protocol)) == -1){
-      perror("Server: Socket");
+    //Socket 
+    sock_fd = socket(current->ai_family, current->ai_socktype, 
+				current->ai_protocol);
+    if (sock_fd == -1){
+      perror("Server: socket");
       continue;
     }
-    if (setsockopt(sock_fd, SOL_SOCKET, SO_REUSEADDR, &val, 
-		     sizeof(int)) == -1){
+    err = setsockopt(sock_fd, SOL_SOCKET, SO_REUSEADDR, &val, sizeof(int));
+    if (err == -1){
       perror("Server: setsockopt");
       exit(1);
     }
-	//Bind
-    if (bind(sock_fd, current->ai_addr, current->ai_addrlen) == -1){
+    //Bind
+    err = bind(sock_fd, current->ai_addr, current->ai_addrlen); 
+    if (err == -1){
       close(sock_fd);
       perror("Server: bind");
       continue;
     } 
-	//Listen
-    if (listen(sock_fd, BACKLOG) == -1){
+    //Listen
+    err = listen(sock_fd, BACKLOG);
+    if (err == -1){
       perror("Server: listen:");
-      exit(1);
+      exit(1);  
     }
- }
+    
+    //Working Server
+    break;
+  }
   
-  printf("It's working!!!\n");
-
+  printf("Server: Waiting for Connections...\n");
+  
   freeaddrinfo(server_info);  //Done with Struct
-
+  
   if (current == NULL){
     fprintf(stderr, "Could not create server\n");
     exit(1);
   }
-
-  //Add stuff for client connection (Accept loop)
+  
+  //Accept loop for connections
+  while(1){
+    struct sockaddr_storage client_addr;
+    socklen_t client_addr_size = sizeof(client_addr);
+    
+    new_fd = accept(sock_fd, (struct socketaddr *)&client_addr,
+		    &client_addr_size);
+    if (new_fd == -1){
+      perror("Server: accept:");
+			continue;	//Don't want to close connection from one bad accept
+    }
+		
+		printf("Accepted Connection...\n");
+		//inet_ntop cases for both INET4 and INET6
+		//Fork for accept connection
+		
+		char *msg = "Hello world!\n";
+		send(new_fd, msg, strlen(msg), 0);
+		close(new_fd);
+		
+		printf("Closed Connection...\n");
+  }
   return 0;
 }
