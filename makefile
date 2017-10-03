@@ -1,11 +1,10 @@
 CFLAGS = -Wall -pedantic -std=c99 -D_POSIX_C_SOURCE=200809L
-#POSIX 2001, 2008
 
 .PHONY: all clean
 
 all: qotdd 
 
-qotdd: qotdd.o
+qotdd: qotdd.o qotdd_server.o
 	$(CC) $(LDFLAGS) -o $@ $^
 
 qotdd.o: qotdd.c
@@ -13,6 +12,9 @@ qotdd.o: qotdd.c
 	
 qotdd_server.o: qotdd_server.c qotdd_server.h
 	$(CC) $(CFLAGS) -c $<
+	
+test_server: qotdd_server.o
+	$(CC) $(LDFLAGS) -o $@ $^
 
 jsmn/libjsmn.a:
 	make -C jsmn

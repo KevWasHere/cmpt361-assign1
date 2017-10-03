@@ -19,9 +19,11 @@
 #include <arpa/inet.h>
 #include <sys/wait.h>
 
-#include <signal.h>
+//#include <signal.h>
 
 #define BACKLOG 20 //20 Pending connections allowed 
+
+#include "qotdd_server.h"
 
 //Parse usage (qotdd)
 //Server Setup. Socket. Running (Accept) with fork
@@ -47,18 +49,8 @@ void usage(char *progname){
 //Have main on bottom. Break up code later
 //http://beej.us/guide/bgnet/output/html/multipage/index.html
 
-//Sockaddr for IPv4 or IPv6:
-void *get_in_addr(struct sockaddr *current_addr){
-	if(current_addr->sa_family == PF_INET){
-		return &(((struct sockaddr_in*)current_addr)->sin_addr);
-	}else if(current_addr->sa_family == PF_INET6){
-		return &(((struct sockaddr_in6*)current_addr)->sin6_addr);
-	}else{
-		fprintf(stderr, "Unexpected address family for client\n");
-		exit(EXIT_FAILURE);
-	}	
-}
 
+/*
 //Signal handler for SIGCHLD. Code sampled from microhow.info and CMPT360
 void sigchld_handler(int signal){ 	
 	//Chance of waitpid() overwriting errno. Save and restore later
@@ -66,14 +58,27 @@ void sigchld_handler(int signal){
   while((waitpid(-1, NULL, WNOHANG)) > 0){}
   errno = saved_errno;
 }
+*/
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[]){
   //Standard port if no port is specified
-  char *port = "7890";  //CHANGE THIS LATER TO 1700
+  /*char *port = "7890";  //CHANGE THIS LATER TO 1700
   
   struct addrinfo hints, *server_info, *current;
   int sock_fd, new_fd;
   int val = 1;
+	*/
+	
+	int sock_fd;
+	
+	sock_fd = new_server();
+	
+	clean_chld();
+	
+	accept_loop(sock_fd);
+	
+	return 0;
+	
 	//Just use argc > 3 or something
   /*while ((option = getopt(argc, argv,":p")) != -1){
     switch(option){
@@ -84,8 +89,7 @@ int main(int argc, char *argv[]) {
     }
   }*/
 
-
-  memset(&hints, 0, sizeof(hints));
+  /*memset(&hints, 0, sizeof(hints));
 
   hints.ai_family = AF_UNSPEC;
   hints.ai_socktype = SOCK_STREAM;
@@ -136,8 +140,9 @@ int main(int argc, char *argv[]) {
   if (current == NULL){
     fprintf(stderr, "Could not create server\n");
     exit(1);
-  }
+  }*/
 	
+	/*
 	//Cleans dead processes. Code sampled from microhowto.info and CMPT360
   struct sigaction sa;
 	sa.sa_handler = &sigchld_handler;
@@ -147,7 +152,9 @@ int main(int argc, char *argv[]) {
 		perror("Sigaction");
   exit(1);
 	}
+	*/
 	
+	/*
   //Accept loop for connections
   while(1){
     struct sockaddr_storage client_addr;
@@ -190,5 +197,6 @@ int main(int argc, char *argv[]) {
 		
 		printf("Closed Connection...\n");
   }
+	*/
   return 0;
 }
