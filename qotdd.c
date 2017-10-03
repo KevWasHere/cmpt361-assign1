@@ -4,9 +4,6 @@
   # qotdd.c
   # Description here later
 *-----------------------------------------------------------------------*/
-//#define _POSIX_C_SORUCE >= 1
-//#define _XOPEN_SOURCE
-//#define _POSIX_SOURCE
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -18,27 +15,66 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
+
 #include <arpa/inet.h>
+#include <sys/wait.h>
 
 #include <signal.h>
 
 #define BACKLOG 20 //20 Pending connections allowed 
 
+//Parse usage (qotdd)
+//Server Setup. Socket. Running (Accept) with fork
+//GET HTTP 1.1 for JSON
+//JSMN Parse
+
+//Client to JSON - Socket, Connect, Close
+//Write then read 
+
+//Break this up into get, http, and content
+char *header = "GET / HTTP/1.1\r\nHost: date.jsontest.com\r\nConnection:close\r\n\r\n";
+
+/*Reference
+Used for SIGCLD Handler
+http://www.microhowto.info/howto/reap_zombie_processes_using_a_sigchld_handler.html
+*/
+
 //Prints usage message of the program
-void usage (char *progname){
+void usage(char *progname){
   printf("usage: %s Usage message here\n", progname);
 }
 
 //Have main on bottom. Break up code later
 //http://beej.us/guide/bgnet/output/html/multipage/index.html
 
+//Sockaddr for IPv4 or IPv6:
+void *get_in_addr(struct sockaddr *current_addr){
+	if(current_addr->sa_family == PF_INET){
+		return &(((struct sockaddr_in*)current_addr)->sin_addr);
+	}else if(current_addr->sa_family == PF_INET6){
+		return &(((struct sockaddr_in6*)current_addr)->sin6_addr);
+	}else{
+		fprintf(stderr, "Unexpected address family for client\n");
+		exit(EXIT_FAILURE);
+	}	
+}
+
+//Signal handler for SIGCHLD. Code sampled from microhow.info and CMPT360
+void sigchld_handler(int signal){ 	
+	//Chance of waitpid() overwriting errno. Save and restore later
+  int saved_errno = errno;
+  while((waitpid(-1, NULL, WNOHANG)) > 0){}
+  errno = saved_errno;
+}
+
 int main(int argc, char *argv[]) {
   //Standard port if no port is specified
-  char *port = "1700";
+  char *port = "7890";  //CHANGE THIS LATER TO 1700
   
   struct addrinfo hints, *server_info, *current;
-  int option, sock_fd, new_fd;
+  int sock_fd, new_fd;
   int val = 1;
+	//Just use argc > 3 or something
   /*while ((option = getopt(argc, argv,":p")) != -1){
     switch(option){
     case 'p' : port = optarg;
@@ -101,30 +137,42 @@ int main(int argc, char *argv[]) {
     fprintf(stderr, "Could not create server\n");
     exit(1);
   }
-  
+	
+	//Cleans dead processes. Code sampled from microhowto.info and CMPT360
+  struct sigaction sa;
+	sa.sa_handler = &sigchld_handler;
+	sigemptyset(&sa.sa_mask);
+	sa.sa_flags = SA_RESTART | SA_NOCLDSTOP;
+	if (sigaction(SIGCHLD, &sa, 0) == -1) {
+		perror("Sigaction");
+  exit(1);
+	}
+	
   //Accept loop for connections
   while(1){
     struct sockaddr_storage client_addr;
     socklen_t client_addr_size = sizeof(client_addr);
     
-    new_fd = accept(sock_fd, (struct socketaddr *)&client_addr,
+    new_fd = accept(sock_fd, (struct sockaddr *)&client_addr,
 		    &client_addr_size);
     if (new_fd == -1){
       perror("Server: accept:");
 			continue;	//Don't want to close connection from one bad accept
     }
 		
+		char buff_size[INET6_ADDRSTRLEN];
+		inet_ntop(client_addr.ss_family, 
+				get_in_addr((struct sockaddr *)&client_addr),
+				buff_size, sizeof buff_size);
+
 		printf("Accepted Connection...\n");
-		//inet_ntop cases for both INET4 and INET6
-		
-		
 		
 		//Fork for accept connection
 		int pid = fork();
 		if (pid < 0) {
 			//Fork failed. student server allowed for 50 processes
 			fprintf(stderr, "Fork failed");
-			exit(EXIT_FAILURE);
+			exit(1);
 		} else if (pid == 0) {
 			//Currently child
 			close(sock_fd); //Close becuase not listening for new connections
@@ -134,15 +182,11 @@ int main(int argc, char *argv[]) {
 			
 			close(new_fd);
 			
-			exit(EXIT_FAILURE);
+			exit(0);
 		} else {
 			//Currently Parrent
 			close(new_fd); //Close client because not interating
 		}
-		
-		//char *msg = "Hello world!\n";
-		//send(new_fd, msg, strlen(msg), 0);
-		//close(new_fd);
 		
 		printf("Closed Connection...\n");
   }
