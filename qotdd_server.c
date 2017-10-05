@@ -62,7 +62,7 @@ void *get_in_addr(struct sockaddr *current_addr){
 
 //Creates new server for client-server connection
 int new_qotdd_server(){
-	char *port = "7890";
+	char *port = "1700";
 	struct addrinfo hints, *server_info, *current;
 	int sock_fd;
 	int val = 1;
