@@ -9,42 +9,23 @@
 #include <stdlib.h>
 
 #include <unistd.h>
-//#include <errno.h>
 #include <string.h>
 
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
-#include <arpa/inet.h>
 
-
-//Break this up into get, http, and content
-char *header = "GET /advice HTTP/1.1\r\nHost: api.adviceslip.com\r\nConnection:close\r\n\r\n";
  
- //Client to JSON - Socket, Connect, Close
-//Write then read 
-//https://github.com/zserge/jsmn/blob/master/example/simple.c
-//Create second hint with ai_protocol = IPPROT_TCP; ai_family = AF_INET6
-//getaddrinfo(host, 80, &hints, &server_info);
-//snprintf(buffer, size, "GET / HTTP/1.1\r\nHost: date.jsontest.com\r\nConnection:close\r\n\r\n"
-//write(socket, buff, size)
-//int b = read(socket, buff, size); //b is status
-
-
-
+//Connect to JSON server and receive data
 char *receive_json(int sock_fd, char *path, char *hostname){
 	int err;
 	
 	//Create GET Reqest
-	//char *mystr = "GET /advice HTTP/1.1\r\nHost: api.adviceslip.com\r\nConnection:close\r\n\r\n";
 	char buf[500];
-	snprintf(buf, 500, "GET /%s HTTP/1.1\r\nHost: %s\r\nConnection:close\r\n\r\n", path, hostname);
-	
-	//CHANGE THIS TO MALLOC LATER!!!!!
-	
-	
+	snprintf(buf, 500, "GET /%s HTTP/1.1\r\nHost: %s\r\nConnection:close\r\n\r\n",
+			path, hostname);
+
 	//Send GET Request
-	//write(sock_fd, mystr, strlen(mystr));
 	err =	write(sock_fd, buf, strlen(buf));
 	if (err == -1) {
 		fprintf(stderr, "partial/failed write\n");
@@ -53,23 +34,22 @@ char *receive_json(int sock_fd, char *path, char *hostname){
 	
 	//Read recieved JSON
 	char *buffRead = malloc(100000 * sizeof(char));
+	if (buffRead == NULL){
+		fprintf(stderr, "Malloc Failed\n");
+		exit(1);
+	}
 	err = read(sock_fd, buffRead, 100000);
 	if (err == -1) {
 		perror("read");
 		exit(1);
 	}
 	
-	//printf("%s\n", buffRead);
-	
 	close(sock_fd);
 	
 	return buffRead;
 }
 
-
-
 //Creates new socket for json server connection
-//INCLUDE PORT VARIABLE LATER FOR DIFFERNET PORT
 int sock_json(char *hostname, char *port){ 
 	struct addrinfo hints, *server_info, *current;
 	int sock_fd;
@@ -83,8 +63,6 @@ int sock_json(char *hostname, char *port){
 
 	hints.ai_family = AF_UNSPEC;
 	hints.ai_socktype = SOCK_STREAM;
-	//hints.ai_flags = AI_PASSIVE;
-	//hints.ai_protocol = IPPROTO_TCP;
 
 	int err = getaddrinfo(hostname, port, &hints, &server_info);
 	
@@ -122,16 +100,5 @@ int sock_json(char *hostname, char *port){
 	
 	printf("Connection Established...\n");
 	
-	//receive_json(sock_fd, path, hostname);
-	
 	return sock_fd;	
 }
-	
-	
-	
-	
-	
-	
-	
-	
-	
